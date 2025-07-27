@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+
+	"github.com/tomanta/lorehold/internal/api/scryfall"
 )
 
 // App struct
@@ -24,4 +26,16 @@ func (a *App) startup(ctx context.Context) {
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+func (a *App) Search(query string) []string {
+	result, _ := scryfall.CardSearch(query)
+
+	var cardNames []string
+
+	for _, data := range result.Data {
+		cardNames = append(cardNames, data.Name)
+	}
+
+	return cardNames
 }

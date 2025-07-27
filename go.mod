@@ -1,4 +1,4 @@
-module lorehold
+module github.com/tomanta/lorehold
 
 go 1.23
 

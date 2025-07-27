@@ -12,6 +12,16 @@ import (
 var assets embed.FS
 
 func main() {
+	// result, _ := scryfall.CardSearch("Jace")
+
+	// fmt.Printf("%d cards found:\n", result.TotalCards)
+	// for _, card := range result.Data {
+	// 	fmt.Printf("  - %s\n", card.Name)
+	// }
+	LaunchApp()
+}
+
+func LaunchApp() {
 	// Create an instance of the app structure
 	app := NewApp()
 
