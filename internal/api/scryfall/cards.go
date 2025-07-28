@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"time"
 )
 
 const (
@@ -15,18 +14,16 @@ const (
 	searchEndpoint = "/cards/search"
 )
 
-func CardSearch(query string) (*SearchResult, error) {
-	httpClient := http.Client{Timeout: 10 * time.Second}
-
+func CardSearch(apiClient *Client, query string) (*SearchResult, error) {
 	url := apiRoot + searchEndpoint + "?q=" + query
 	request, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Set("User-Agent", userAgent)
-	request.Header.Set("Accept", acceptHeader)
-	response, err := httpClient.Do(request)
+	request.Header.Set("User-Agent", apiClient.userAgent)
+	request.Header.Set("Accept", apiClient.accepts)
+	response, err := apiClient.Do(request)
 	if err != nil {
 		return nil, err
 	}

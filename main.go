@@ -2,23 +2,35 @@ package main
 
 import (
 	"embed"
+	"fmt"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+
+	"github.com/tomanta/lorehold/internal/api/scryfall"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
-func main() {
-	// result, _ := scryfall.CardSearch("Jace")
+type Config struct {
+	client *scryfall.Client
+}
 
-	// fmt.Printf("%d cards found:\n", result.TotalCards)
-	// for _, card := range result.Data {
-	// 	fmt.Printf("  - %s\n", card.Name)
-	// }
-	LaunchApp()
+func main() {
+	client := scryfall.NewClient()
+	var config = Config{
+		client: client,
+	}
+
+	result, _ := scryfall.CardSearch(config.client, "Jace")
+
+	fmt.Printf("%d cards found:\n", result.TotalCards)
+	for _, card := range result.Data {
+		fmt.Printf("  - %s\n", card.Name)
+	}
+	// LaunchApp()
 }
 
 func LaunchApp() {
