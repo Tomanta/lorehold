@@ -24,7 +24,7 @@ func main() {
 		client: client,
 	}
 
-	result, _ := scryfall.CardSearch(config.client, "Jace")
+	result, _ := config.client.Search("Jace")
 
 	fmt.Printf("%d cards found:\n", result.TotalCards)
 	for _, card := range result.Data {

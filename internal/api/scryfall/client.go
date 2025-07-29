@@ -12,30 +12,67 @@ const (
 
 	// Scryfall requests no more than 10 requests per second
 	rateLimitDefault time.Duration = 100 * time.Millisecond
+
+	// base URL
+	baseUriDefault string = "https://api.scryfall.com"
 )
 
 type Client struct {
-	ApiClient *http.Client
+	apiClient *http.Client
 	userAgent string
 	accepts   string
 	rateLimit time.Duration
+	baseUri   string
 }
 
-func NewClient() *Client {
+type clientOptions struct {
+	userAgent string
+	accepts   string
+	rateLimit time.Duration
+	baseUri   string
+}
+
+type ClientOption func(*clientOptions)
+
+func WithBaseUri(uri string) ClientOption {
+	return func(o *clientOptions) {
+		o.baseUri = uri
+	}
+}
+
+func WithUserAgent(userAgent string) ClientOption {
+	return func(o *clientOptions) {
+		o.userAgent = userAgent
+	}
+}
+
+func NewClient(options ...ClientOption) *Client {
+	opts := &clientOptions{
+		userAgent: userAgentDefault,
+		accepts:   acceptsDefault,
+		rateLimit: rateLimitDefault,
+		baseUri:   baseUriDefault,
+	}
+
+	for _, option := range options {
+		option(opts)
+	}
+
 	httpClient := &http.Client{
 		Timeout: timeoutDefault,
 	}
 
 	apiClient := &Client{
-		ApiClient: httpClient,
-		userAgent: userAgentDefault,
-		accepts:   acceptsDefault,
-		rateLimit: rateLimitDefault,
+		apiClient: httpClient,
+		userAgent: opts.userAgent,
+		accepts:   opts.accepts,
+		rateLimit: opts.rateLimit,
+		baseUri:   opts.baseUri,
 	}
 	return apiClient
 }
 
-func (c *Client) Do(req *http.Request) (*http.Response, error) {
-	resp, err := c.ApiClient.Do(req)
+func (c *Client) do(req *http.Request) (*http.Response, error) {
+	resp, err := c.apiClient.Do(req)
 	return resp, err
 }

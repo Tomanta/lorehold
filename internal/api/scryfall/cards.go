@@ -8,22 +8,19 @@ import (
 )
 
 const (
-	apiRoot        = "https://api.scryfall.com"
-	userAgent      = "lorehold"
-	acceptHeader   = "application/json;q=0.9,*/*;q=0.8"
 	searchEndpoint = "/cards/search"
 )
 
-func CardSearch(apiClient *Client, query string) (*SearchResult, error) {
-	url := apiRoot + searchEndpoint + "?q=" + query
+func (c *Client) Search(query string) (*SearchResult, error) {
+	url := c.baseUri + searchEndpoint + "?q=" + query
 	request, err := http.NewRequestWithContext(context.Background(), "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	request.Header.Set("User-Agent", apiClient.userAgent)
-	request.Header.Set("Accept", apiClient.accepts)
-	response, err := apiClient.Do(request)
+	request.Header.Set("User-Agent", c.userAgent)
+	request.Header.Set("Accept", c.accepts)
+	response, err := c.do(request)
 	if err != nil {
 		return nil, err
 	}
