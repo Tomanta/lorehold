@@ -1,16 +1,71 @@
 package scryfall
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
+func createTestServer(path string, handler func(http.ResponseWriter, *http.Request), clientOptions ...ClientOption) (*Client, *httptest.Server, error) {
+	mux := http.NewServeMux()
+	mux.HandleFunc(path, handler)
+	ts := httptest.NewServer(mux)
+
+	mergedClientOptions := []ClientOption{WithBaseUri(ts.URL)}
+	mergedClientOptions = append(mergedClientOptions, clientOptions...)
+	client := NewClient(mergedClientOptions...)
+	return client, ts, nil
+
+}
+
+func TestNewClientSendsUserAgent(t *testing.T) {
+	tests := []struct {
+		name              string
+		clientOptions     []ClientOption
+		expectedUserAgent string
+	}{
+		{
+			name:              "default user agent",
+			clientOptions:     nil,
+			expectedUserAgent: userAgentDefault,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				userAgent := r.Header.Get("User-Agent")
+				if userAgent != test.expectedUserAgent {
+					w.WriteHeader(http.StatusBadRequest)
+					fmt.Fprintln(w, `{"object": "error", "code":"bad_request", "status":400, "details": ""}`)
+					return
+				}
+
+				fmt.Fprintln(w, `{"object":"list", "has_more": false, "data":[]}`)
+			})
+
+			client, ts, err := createTestServer("/cards/search", handler, test.clientOptions...)
+			if err != nil {
+				t.Fatalf("Error setting up test server: %v", err)
+			}
+			defer ts.Close()
+
+			_, err = client.Search("test")
+			if err != nil {
+				t.Fatalf("Error validating user agent: %v", err)
+			}
+		})
+	}
+
+}
 func TestNewClientUserAgent(t *testing.T) {
 	clientTests := []struct {
 		name              string
 		clientOptions     []ClientOption
 		expectedUserAgent string
 	}{
-		{name: "default user agent", clientOptions: nil, expectedUserAgent: "lorehold"},
+		{name: "default user agent", clientOptions: nil, expectedUserAgent: userAgentDefault},
 		{name: "custom user agent", clientOptions: []ClientOption{WithUserAgent("test")}, expectedUserAgent: "test"},
 	}
 
