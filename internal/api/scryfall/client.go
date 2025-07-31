@@ -18,11 +18,12 @@ const (
 )
 
 type Client struct {
-	apiClient *http.Client
-	userAgent string
-	accepts   string
-	rateLimit time.Duration
-	baseUri   string
+	apiClient   *http.Client
+	userAgent   string
+	accepts     string
+	rateLimit   time.Duration
+	baseUri     string
+	lastRequest time.Time
 }
 
 type clientOptions struct {
@@ -43,6 +44,12 @@ func WithBaseUri(uri string) ClientOption {
 func WithUserAgent(userAgent string) ClientOption {
 	return func(o *clientOptions) {
 		o.userAgent = userAgent
+	}
+}
+
+func WithTimeout(timeout time.Duration) ClientOption {
+	return func(o *clientOptions) {
+		o.rateLimit = timeout
 	}
 }
 
@@ -73,6 +80,14 @@ func NewClient(options ...ClientOption) *Client {
 }
 
 func (c *Client) do(req *http.Request) (*http.Response, error) {
+	// Not optimal algorithm; if we add the limit duration to
+	// the last request time and that is before NOW,
+	// sleep for the rate limit. Latency is minimal for a
+	// desktop app.
+	if time.Now().Before(c.lastRequest.Add(c.rateLimit)) {
+		time.Sleep(c.rateLimit)
+	}
 	resp, err := c.apiClient.Do(req)
+	c.lastRequest = time.Now()
 	return resp, err
 }

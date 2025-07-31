@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func createTestServer(path string, handler func(http.ResponseWriter, *http.Request), clientOptions ...ClientOption) (*Client, *httptest.Server, error) {
@@ -12,7 +13,7 @@ func createTestServer(path string, handler func(http.ResponseWriter, *http.Reque
 	mux.HandleFunc(path, handler)
 	ts := httptest.NewServer(mux)
 
-	mergedClientOptions := []ClientOption{WithBaseUri(ts.URL)}
+	mergedClientOptions := []ClientOption{WithBaseUri(ts.URL), WithTimeout(time.Second * 0)}
 	mergedClientOptions = append(mergedClientOptions, clientOptions...)
 	client := NewClient(mergedClientOptions...)
 	return client, ts, nil
